@@ -85,4 +85,12 @@ public class ExampleModelRectDrawable extends DrawableBase implements Trackable,
         return cursor;
     }
 
+    @Override
+    public void mouseDown(Set<TrackableObject> objects, int button, int x, int y) {
+    }
+
+    @Override
+    public void mouseUp(int button, int x, int y) {
+    }
+
 }

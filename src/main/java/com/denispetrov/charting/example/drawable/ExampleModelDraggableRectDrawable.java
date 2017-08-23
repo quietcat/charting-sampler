@@ -1,5 +1,7 @@
 package com.denispetrov.charting.example.drawable;
 
+import java.util.Set;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Cursor;
 import org.slf4j.Logger;
@@ -10,16 +12,20 @@ import com.denispetrov.charting.example.model.ExampleModel;
 import com.denispetrov.charting.example.plugin.SimpleTrackableObject;
 import com.denispetrov.charting.model.FPoint;
 import com.denispetrov.charting.model.FRectangle;
+import com.denispetrov.charting.plugin.Clickable;
 import com.denispetrov.charting.plugin.Draggable;
 import com.denispetrov.charting.plugin.Trackable;
 import com.denispetrov.charting.plugin.TrackableObject;
+import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
 import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 
-public class ExampleModelDraggableRectDrawable extends DrawableBase implements Trackable, Draggable {
+public class ExampleModelDraggableRectDrawable extends DrawableBase implements Trackable, Draggable, Clickable {
     private static final Logger LOG = LoggerFactory.getLogger(ExampleModelDraggableRectDrawable.class);
 
     private TrackerViewPlugin trackerViewPlugin;
+    private DraggerViewPlugin draggerViewPlugin;
+    private TrackableObject objectDragged;
     private Cursor cursor;
 
     @Override
@@ -61,6 +67,7 @@ public class ExampleModelDraggableRectDrawable extends DrawableBase implements T
     public void setView(View view) {
         super.setView(view);
         trackerViewPlugin = view.findPlugin(TrackerViewPlugin.class);
+        draggerViewPlugin = view.findPlugin(DraggerViewPlugin.class);
         this.cursor = view.getCanvas().getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL);
     }
 
@@ -80,6 +87,29 @@ public class ExampleModelDraggableRectDrawable extends DrawableBase implements T
     public FPoint getOrigin(Object object) {
         FRectangle target = (FRectangle) object;
         return new FPoint(target.x, target.y);
+    }
+
+    @Override
+    public void objectClicked(Set<TrackableObject> objects, int button) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseDown(Set<TrackableObject> objects, int button, int x, int y) {
+        LOG.debug("{}", objects);
+        if (objects != null && objects.size() > 0) {
+            objectDragged = objects.iterator().next();
+            draggerViewPlugin.beginDrag(this, objectDragged);
+        }
+    }
+
+    @Override
+    public void mouseUp(int button, int x, int y) {
+        if (objectDragged != null) {
+            draggerViewPlugin.endDrag();
+            objectDragged = null;
+        }
     }
 
 }

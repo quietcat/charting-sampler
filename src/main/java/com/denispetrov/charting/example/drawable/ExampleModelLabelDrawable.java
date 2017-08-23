@@ -18,6 +18,7 @@ import com.denispetrov.charting.plugin.Clickable;
 import com.denispetrov.charting.plugin.Draggable;
 import com.denispetrov.charting.plugin.Trackable;
 import com.denispetrov.charting.plugin.TrackableObject;
+import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
 import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 
@@ -25,11 +26,13 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
     private static final Logger LOG = LoggerFactory.getLogger(ExampleModelLabelDrawable.class);
 
     private TrackerViewPlugin trackerViewPlugin;
+    private DraggerViewPlugin draggerViewPlugin;
     private Cursor cursor;
     private DrawParameters drawParameters = new DrawParameters();
 
     private TrackableObject lastUpdatedTO = null;
     private boolean needToUpdateIRects = false;
+    private TrackableObject objectDragged = null;
 
     @Override
     public void draw() {
@@ -108,6 +111,7 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
     public void setView(View view) {
         super.setView(view);
         trackerViewPlugin = view.findPlugin(TrackerViewPlugin.class);
+        draggerViewPlugin = view.findPlugin(DraggerViewPlugin.class);
         this.cursor = view.getCanvas().getDisplay().getSystemCursor(SWT.CURSOR_HAND);
     }
 
@@ -129,5 +133,22 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
         // force recalc of irects
         needToUpdateIRects = true;
         lastUpdatedTO = null;
+    }
+
+    @Override
+    public void mouseDown(Set<TrackableObject> objects, int button, int x, int y) {
+        LOG.debug("{}", objects);
+        if (objects != null && objects.size() > 0) {
+            objectDragged = objects.iterator().next();
+            draggerViewPlugin.beginDrag(this, objectDragged);
+        }
+    }
+
+    @Override
+    public void mouseUp(int button, int x, int y) {
+        if (objectDragged != null) {
+            draggerViewPlugin.endDrag();
+            objectDragged = null;
+        }
     }
 }
