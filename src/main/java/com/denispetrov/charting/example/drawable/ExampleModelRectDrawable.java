@@ -1,5 +1,6 @@
 package com.denispetrov.charting.example.drawable;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
@@ -86,7 +87,7 @@ public class ExampleModelRectDrawable extends DrawableBase implements Trackable,
     }
 
     @Override
-    public void mouseDown(Set<TrackableObject> objects, int button, int x, int y) {
+    public void mouseDown(Map<Clickable,Set<TrackableObject>> objects, int button, int x, int y) {
     }
 
     @Override

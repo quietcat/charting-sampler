@@ -1,5 +1,6 @@
 package com.denispetrov.charting.example.drawable;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
@@ -96,10 +97,11 @@ public class ExampleModelDraggableRectDrawable extends DrawableBase implements T
     }
 
     @Override
-    public void mouseDown(Set<TrackableObject> objects, int button, int x, int y) {
+    public void mouseDown(Map<Clickable,Set<TrackableObject>> objects, int button, int x, int y) {
         LOG.debug("{}", objects);
-        if (objects != null && objects.size() > 0) {
-            objectDragged = objects.iterator().next();
+        Set<TrackableObject> myObjects = objects.get(this);
+        if (myObjects != null && myObjects.size() > 0) {
+            objectDragged = myObjects.iterator().next();
             draggerViewPlugin.beginDrag(this, objectDragged);
         }
     }
