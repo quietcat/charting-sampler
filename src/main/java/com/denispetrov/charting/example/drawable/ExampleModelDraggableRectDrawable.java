@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import com.denispetrov.charting.drawable.impl.DrawableBase;
 import com.denispetrov.charting.example.model.ExampleModel;
-import com.denispetrov.charting.example.plugin.SimpleTrackableObject;
 import com.denispetrov.charting.model.FPoint;
 import com.denispetrov.charting.model.FRectangle;
 import com.denispetrov.charting.plugin.Clickable;
@@ -18,6 +17,7 @@ import com.denispetrov.charting.plugin.Draggable;
 import com.denispetrov.charting.plugin.Trackable;
 import com.denispetrov.charting.plugin.TrackableObject;
 import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
+import com.denispetrov.charting.plugin.impl.SimpleTrackableObject;
 import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 

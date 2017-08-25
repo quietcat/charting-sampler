@@ -13,13 +13,13 @@ import com.denispetrov.charting.drawable.DrawParameters;
 import com.denispetrov.charting.drawable.impl.DrawableBase;
 import com.denispetrov.charting.example.model.ExampleModel;
 import com.denispetrov.charting.example.model.Label;
-import com.denispetrov.charting.example.plugin.SimpleTrackableObject;
 import com.denispetrov.charting.model.FPoint;
 import com.denispetrov.charting.plugin.Clickable;
 import com.denispetrov.charting.plugin.Draggable;
 import com.denispetrov.charting.plugin.Trackable;
 import com.denispetrov.charting.plugin.TrackableObject;
 import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
+import com.denispetrov.charting.plugin.impl.SimpleTrackableObject;
 import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 
@@ -51,7 +51,11 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
             } else {
                 // only need to update trackable object for one label
                 Label label = (Label) lastUpdatedTO.getTarget();
-                lastUpdatedTO.setIRect(viewContext.textRectangle(label.getText(), label.getOrigin().x, label.getOrigin().y, drawParameters));
+                lastUpdatedTO.setIRect(viewContext.textRectangle(
+                        label.getText(),
+                        label.getOrigin().x,
+                        label.getOrigin().y,
+                        drawParameters));
                 lastUpdatedTO.setFRect(viewContext.rectangle(lastUpdatedTO.getIRect()));
                 drawLabels();
             }
@@ -64,7 +68,16 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
     private void drawLabels() {
         ExampleModel model = (ExampleModel) this.viewContext.getModel();
         for (Label label : model.getLabels()) {
-            viewContext.drawText(label.getText(), label.getOrigin().x, label.getOrigin().y, drawParameters);
+            viewContext.drawText(
+                    label.getText(),
+                    label.getOrigin().x,
+                    label.getOrigin().y,
+                    drawParameters);
+            viewContext.drawRectangle(viewContext.rectangle(viewContext.textRectangle(
+                    label.getText(),
+                    label.getOrigin().x,
+                    label.getOrigin().y,
+                    drawParameters)));
         }
     }
 
@@ -114,6 +127,8 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
         trackerViewPlugin = view.findPlugin(TrackerViewPlugin.class);
         draggerViewPlugin = view.findPlugin(DraggerViewPlugin.class);
         this.cursor = view.getCanvas().getDisplay().getSystemCursor(SWT.CURSOR_HAND);
+        drawParameters.xMargin = 5;
+        drawParameters.yMargin = 5;
     }
 
     @Override
