@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.denispetrov.charting.drawable.DrawParameters;
-import com.denispetrov.charting.drawable.impl.DrawableBase;
 import com.denispetrov.charting.example.model.ExampleModel;
 import com.denispetrov.charting.example.model.Label;
 import com.denispetrov.charting.model.FPoint;
@@ -19,15 +18,16 @@ import com.denispetrov.charting.plugin.Draggable;
 import com.denispetrov.charting.plugin.Trackable;
 import com.denispetrov.charting.plugin.TrackableObject;
 import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
+import com.denispetrov.charting.plugin.impl.PluginAdapter;
 import com.denispetrov.charting.plugin.impl.SimpleTrackableObject;
 import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 
-public class ExampleModelLabelDrawable extends DrawableBase implements Trackable, Draggable, Clickable {
+public class ExampleModelLabelDrawable extends PluginAdapter<ExampleModel> implements Trackable, Draggable, Clickable {
     private static final Logger LOG = LoggerFactory.getLogger(ExampleModelLabelDrawable.class);
 
-    private TrackerViewPlugin trackerViewPlugin;
-    private DraggerViewPlugin draggerViewPlugin;
+    private TrackerViewPlugin<ExampleModel> trackerViewPlugin;
+    private DraggerViewPlugin<ExampleModel> draggerViewPlugin;
     private Cursor cursor;
     private DrawParameters drawParameters = new DrawParameters();
 
@@ -35,8 +35,13 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
     private boolean needToUpdateIRects = false;
     private TrackableObject objectDragged = null;
 
+    public ExampleModelLabelDrawable(TrackerViewPlugin<ExampleModel> trackerViewPlugin, DraggerViewPlugin<ExampleModel> draggerViewPlugin) {
+        this.trackerViewPlugin = trackerViewPlugin;
+        this.draggerViewPlugin = draggerViewPlugin;
+    }
+
     @Override
-    public void draw() {
+    public void draw(View<ExampleModel> view, ExampleModel model) {
         if (needToUpdateIRects) {
             if (lastUpdatedTO == null) {
                 // loop through trackable objects instead of the actual labels in the model
@@ -44,19 +49,19 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
                 Collection<TrackableObject> trackables = trackerViewPlugin.getTrackables(this);
                 for (TrackableObject to : trackables) {
                     Label label = (Label) to.getTarget();
-                    to.setIRect(viewContext.textRectangle(label.getText(), label.getOrigin().x, label.getOrigin().y, drawParameters));
-                    to.setFRect(viewContext.rectangle(to.getIRect()));
-                    viewContext.drawText(label.getText(), label.getOrigin().x, label.getOrigin().y, drawParameters);
+                    to.setIRect(view.textRectangle(label.getText(), label.getOrigin().x, label.getOrigin().y, drawParameters));
+                    to.setFRect(view.getViewContext().rectangle(to.getIRect()));
+                    view.drawText(label.getText(), label.getOrigin().x, label.getOrigin().y, drawParameters);
                 }
             } else {
                 // only need to update trackable object for one label
                 Label label = (Label) lastUpdatedTO.getTarget();
-                lastUpdatedTO.setIRect(viewContext.textRectangle(
+                lastUpdatedTO.setIRect(view.textRectangle(
                         label.getText(),
                         label.getOrigin().x,
                         label.getOrigin().y,
                         drawParameters));
-                lastUpdatedTO.setFRect(viewContext.rectangle(lastUpdatedTO.getIRect()));
+                lastUpdatedTO.setFRect(view.getViewContext().rectangle(lastUpdatedTO.getIRect()));
                 drawLabels();
             }
             needToUpdateIRects = false;
@@ -66,14 +71,14 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
     }
 
     private void drawLabels() {
-        ExampleModel model = (ExampleModel) this.viewContext.getModel();
+        ExampleModel model = view.getModel();
         for (Label label : model.getLabels()) {
-            viewContext.drawText(
+            view.drawText(
                     label.getText(),
                     label.getOrigin().x,
                     label.getOrigin().y,
                     drawParameters);
-            viewContext.drawRectangle(viewContext.rectangle(viewContext.textRectangle(
+            view.drawRectangle(view.getViewContext().rectangle(view.textRectangle(
                     label.getText(),
                     label.getOrigin().x,
                     label.getOrigin().y,
@@ -84,16 +89,16 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
     @Override
     public void modelUpdated() {
         LOG.debug("model updated");
-        ExampleModel model = (ExampleModel) this.viewContext.getModel();
+        ExampleModel model = view.getModel();
         lastUpdatedTO = null;
-        trackerViewPlugin.clearTrackingObjects(this);
+        trackerViewPlugin.clearTrackableObjects(this);
         for (Label label : model.getLabels()) {
             TrackableObject to = new SimpleTrackableObject();
             to.setTarget(label);
             to.setPixelSized(true);
             to.setXPadding(1);
             to.setYPadding(1);
-            trackerViewPlugin.addTrackingObject(this,to);
+            trackerViewPlugin.addTrackableObject(this,to);
         }
         needToUpdateIRects = true;
     }
@@ -122,10 +127,8 @@ public class ExampleModelLabelDrawable extends DrawableBase implements Trackable
     }
 
     @Override
-    public void setView(View view) {
+    public void setView(View<ExampleModel> view) {
         super.setView(view);
-        trackerViewPlugin = view.findPlugin(TrackerViewPlugin.class);
-        draggerViewPlugin = view.findPlugin(DraggerViewPlugin.class);
         this.cursor = view.getCanvas().getDisplay().getSystemCursor(SWT.CURSOR_HAND);
         drawParameters.xMargin = 5;
         drawParameters.yMargin = 5;

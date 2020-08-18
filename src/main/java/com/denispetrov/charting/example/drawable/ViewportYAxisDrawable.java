@@ -1,12 +1,15 @@
 package com.denispetrov.charting.example.drawable;
 
-import com.denispetrov.charting.drawable.impl.DrawableBase;
+import com.denispetrov.charting.plugin.impl.PluginAdapter;
+import com.denispetrov.charting.view.View;
+import com.denispetrov.charting.view.ViewContext;
 
-public class ViewportYAxisDrawable extends DrawableBase {
+public class ViewportYAxisDrawable<M> extends PluginAdapter<M> {
 
     @Override
-    public void draw() {
-        int resizePosition = viewContext.y(viewContext.getBaseY() + viewContext.getHeight() * viewContext.getResizeCenterY());
+    public void draw(View<M> view, M model) {
+        ViewContext viewContext = view.getViewContext();
+        int resizePosition = viewContext.y(viewContext.getBaseY() + view.getHeight() * viewContext.getResizeCenterY());
         switch (viewContext.getXAxisRange()) {
         case FULL:
             drawLeftAxis(resizePosition);
@@ -22,20 +25,22 @@ public class ViewportYAxisDrawable extends DrawableBase {
     }
 
     private void drawLeftAxis(int resizePosition) {
-        viewContext.drawLine(
+        ViewContext viewContext = view.getViewContext();
+        view.drawLine(
                 viewContext.getBaseX(),
                 viewContext.getBaseY(),
                 viewContext.getBaseX(),
-                viewContext.getBaseY() + viewContext.getHeight());
-        viewContext.getGC().drawOval(viewContext.x(viewContext.getBaseX()) - 10, resizePosition - 3, 7, 7);
+                viewContext.getBaseY() + view.getHeight());
+        view.getGC().drawOval(viewContext.x(viewContext.getBaseX()) - 10, resizePosition - 3, 7, 7);
     }
 
     private void drawRightAxis(int resizePosition) {
-        viewContext.drawLine(
-                viewContext.getBaseX() + viewContext.getWidth(),
+        ViewContext viewContext = view.getViewContext();
+        view.drawLine(
+                viewContext.getBaseX() + view.getWidth(),
                 viewContext.getBaseY(),
-                viewContext.getBaseX() + viewContext.getWidth(),
-                viewContext.getBaseY() + viewContext.getHeight());
-        viewContext.getGC().drawOval(viewContext.x(viewContext.getBaseX() + viewContext.getWidth()) + 3, resizePosition - 3, 7, 7);
+                viewContext.getBaseX() + view.getWidth(),
+                viewContext.getBaseY() + view.getHeight());
+        view.getGC().drawOval(viewContext.x(viewContext.getBaseX() + view.getWidth()) + 3, resizePosition - 3, 7, 7);
     }
 }

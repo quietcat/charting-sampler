@@ -8,7 +8,6 @@ import org.eclipse.swt.graphics.Cursor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.denispetrov.charting.drawable.impl.DrawableBase;
 import com.denispetrov.charting.example.model.ExampleModel;
 import com.denispetrov.charting.model.FPoint;
 import com.denispetrov.charting.model.FRectangle;
@@ -17,31 +16,36 @@ import com.denispetrov.charting.plugin.Draggable;
 import com.denispetrov.charting.plugin.Trackable;
 import com.denispetrov.charting.plugin.TrackableObject;
 import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
+import com.denispetrov.charting.plugin.impl.PluginAdapter;
 import com.denispetrov.charting.plugin.impl.SimpleTrackableObject;
 import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 
-public class ExampleModelDraggableRectDrawable extends DrawableBase implements Trackable, Draggable, Clickable {
+public class ExampleModelDraggableRectDrawable extends PluginAdapter<ExampleModel> implements Trackable, Draggable, Clickable {
     private static final Logger LOG = LoggerFactory.getLogger(ExampleModelDraggableRectDrawable.class);
 
-    private TrackerViewPlugin trackerViewPlugin;
-    private DraggerViewPlugin draggerViewPlugin;
+    private TrackerViewPlugin<ExampleModel> trackerViewPlugin;
+    private DraggerViewPlugin<ExampleModel> draggerViewPlugin;
     private TrackableObject objectDragged;
     private Cursor cursor;
 
+    public ExampleModelDraggableRectDrawable(TrackerViewPlugin<ExampleModel> trackerViewPlugin, DraggerViewPlugin<ExampleModel> draggerViewPlugin) {
+        this.trackerViewPlugin = trackerViewPlugin;
+        this.draggerViewPlugin = draggerViewPlugin;
+    }
+
     @Override
-    public void draw() {
-        ExampleModel model = (ExampleModel) this.viewContext.getModel();
+    public void draw(View<ExampleModel> view, ExampleModel model) {
         for (FRectangle rect : model.getDraggableRectangles()) {
-            viewContext.drawRectangle(rect.x, rect.y, rect.w, rect.h);
+            view.drawRectangle(rect.x, rect.y, rect.w, rect.h);
         }
     }
 
     @Override
     public void modelUpdated() {
         LOG.debug("model updated");
-        ExampleModel model = (ExampleModel) this.viewContext.getModel();
-        trackerViewPlugin.clearTrackingObjects(this);
+        ExampleModel model = view.getModel();
+        trackerViewPlugin.clearTrackableObjects(this);
         for (FRectangle rect : model.getDraggableRectangles()) {
             TrackableObject to = new SimpleTrackableObject();
             to.setTarget(rect);
@@ -49,7 +53,7 @@ public class ExampleModelDraggableRectDrawable extends DrawableBase implements T
             to.setIRect(view.getViewContext().rectangle(rect));
             to.setXPadding(1);
             to.setYPadding(1);
-            trackerViewPlugin.addTrackingObject(this,to);
+            trackerViewPlugin.addTrackableObject(this,to);
         }
     }
 
@@ -65,10 +69,8 @@ public class ExampleModelDraggableRectDrawable extends DrawableBase implements T
     }
 
     @Override
-    public void setView(View view) {
+    public void setView(View<ExampleModel> view) {
         super.setView(view);
-        trackerViewPlugin = view.findPlugin(TrackerViewPlugin.class);
-        draggerViewPlugin = view.findPlugin(DraggerViewPlugin.class);
         this.cursor = view.getCanvas().getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL);
     }
 

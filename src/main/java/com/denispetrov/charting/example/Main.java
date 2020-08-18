@@ -8,7 +8,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 
-import com.denispetrov.charting.drawable.impl.ViewportBackgroundDrawable;
+import com.denispetrov.charting.drawable.ViewportBackgroundDrawable;
 import com.denispetrov.charting.example.drawable.*;
 import com.denispetrov.charting.example.model.ExampleModel;
 import com.denispetrov.charting.example.model.Label;
@@ -31,7 +31,8 @@ public class Main {
 
     protected Shell shell;
     private Canvas zoomingPageCanvas;
-    private View view;
+    private View<ExampleModel> view;
+    private ZoomViewPlugin<ExampleModel> zoomPlugin;
 
     private void run() {
         Display display = Display.getDefault();
@@ -154,7 +155,7 @@ public class Main {
         btnXStickyZero.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                view.findPlugin(ZoomViewPlugin.class).setStickyX(btnXStickyZero.getSelection());
+                zoomPlugin.setStickyX(btnXStickyZero.getSelection());
             }
         });
         btnXStickyZero.setText("Sticky Zero");
@@ -163,7 +164,7 @@ public class Main {
         btnYStickyZero.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                view.findPlugin(ZoomViewPlugin.class).setStickyY(btnYStickyZero.getSelection());
+                zoomPlugin.setStickyY(btnYStickyZero.getSelection());
             }
         });
         btnYStickyZero.setText("Sticky Zero");
@@ -206,23 +207,26 @@ public class Main {
     }
 
     protected void createView() {
-        view = new View();
+        view = new View<ExampleModel>();
         view.setCanvas(zoomingPageCanvas);
 
-        view.addViewPlugin(new TrackerViewPlugin());
-        view.addViewPlugin(new PanViewPlugin());
-        view.addViewPlugin(new ZoomViewPlugin());
-        view.addViewPlugin(new ClickerViewPlugin());
-        view.addViewPlugin(new DraggerViewPlugin());
+        TrackerViewPlugin<ExampleModel> trackerPlugin = new TrackerViewPlugin<>();
+        DraggerViewPlugin<ExampleModel> draggerPlugin = new DraggerViewPlugin<>(trackerPlugin);
+        zoomPlugin = new ZoomViewPlugin<>();
+        view.addPlugin(trackerPlugin);
+        view.addPlugin(new PanViewPlugin<>());
+        view.addPlugin(zoomPlugin);
+        view.addPlugin(new ClickerViewPlugin<>(trackerPlugin));
+        view.addPlugin(draggerPlugin);
 
-        view.addDrawable(new ViewportBackgroundDrawable());
-        view.addDrawable(new ViewportXAxisDrawable());
-        view.addDrawable(new ViewportYAxisDrawable());
-        view.addDrawable(new ViewportZeroMarkDrawable());
+        view.addPlugin(new ViewportBackgroundDrawable<>());
+        view.addPlugin(new ViewportXAxisDrawable<>());
+        view.addPlugin(new ViewportYAxisDrawable<>());
+        view.addPlugin(new ViewportZeroMarkDrawable<>());
 
-        view.addDrawable(new ExampleModelRectDrawable());
-        view.addDrawable(new ExampleModelDraggableRectDrawable());
-        view.addDrawable(new ExampleModelLabelDrawable());
+        view.addPlugin(new ExampleModelRectDrawable(trackerPlugin));
+        view.addPlugin(new ExampleModelDraggableRectDrawable(trackerPlugin, draggerPlugin));
+        view.addPlugin(new ExampleModelLabelDrawable(trackerPlugin, draggerPlugin));
 
         view.init();
 

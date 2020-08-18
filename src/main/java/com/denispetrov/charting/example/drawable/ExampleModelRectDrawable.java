@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.denispetrov.charting.drawable.DrawParameters;
-import com.denispetrov.charting.drawable.impl.DrawableBase;
 import com.denispetrov.charting.example.model.ExampleModel;
 import com.denispetrov.charting.model.FRectangle;
 import com.denispetrov.charting.model.XAnchor;
@@ -17,52 +16,56 @@ import com.denispetrov.charting.model.YAnchor;
 import com.denispetrov.charting.plugin.Clickable;
 import com.denispetrov.charting.plugin.Trackable;
 import com.denispetrov.charting.plugin.TrackableObject;
+import com.denispetrov.charting.plugin.impl.PluginAdapter;
 import com.denispetrov.charting.plugin.impl.SimpleTrackableObject;
 import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 
-public class ExampleModelRectDrawable extends DrawableBase implements Trackable, Clickable {
+public class ExampleModelRectDrawable extends PluginAdapter<ExampleModel> implements Trackable, Clickable {
     private static final Logger LOG = LoggerFactory.getLogger(ExampleModelRectDrawable.class);
 
-    private TrackerViewPlugin trackerViewPlugin;
+    private TrackerViewPlugin<ExampleModel> trackerViewPlugin;
     private DrawParameters dp = new DrawParameters();
     private Cursor cursor;
 
+    public ExampleModelRectDrawable(TrackerViewPlugin<ExampleModel> trackerViewPlugin) {
+        this.trackerViewPlugin = trackerViewPlugin;
+    }
+
     @Override
-    public void draw() {
-        ExampleModel model = (ExampleModel) this.viewContext.getModel();
+    public void draw(View<ExampleModel> view, ExampleModel model) {
         for (FRectangle rect : model.getRectangles()) {
-            viewContext.drawRectangle(rect.x, rect.y, rect.w, rect.h);
-            viewContext.drawLine(rect.x, rect.y + rect.h / 2, rect.x + rect.w, rect.y + rect.h / 2);
+            view.drawRectangle(rect.x, rect.y, rect.w, rect.h);
+            view.drawLine(rect.x, rect.y + rect.h / 2, rect.x + rect.w, rect.y + rect.h / 2);
             dp.xAnchor = XAnchor.LEFT;
             dp.yAnchor = YAnchor.BOTTOM;
-            viewContext.drawText("LB", rect.x + rect.w, rect.y + rect.h, dp);
+            view.drawText("LB", rect.x + rect.w, rect.y + rect.h, dp);
             dp.yAnchor = YAnchor.MIDDLE;
-            viewContext.drawText("LM", rect.x + rect.w, rect.y + rect.h / 2, dp);
+            view.drawText("LM", rect.x + rect.w, rect.y + rect.h / 2, dp);
             dp.yAnchor = YAnchor.TOP;
-            viewContext.drawText("LT", rect.x + rect.w, rect.y, dp);
+            view.drawText("LT", rect.x + rect.w, rect.y, dp);
             dp.xAnchor = XAnchor.RIGHT;
             dp.yAnchor = YAnchor.BOTTOM;
-            viewContext.drawText("RB", rect.x, rect.y + rect.h, dp);
+            view.drawText("RB", rect.x, rect.y + rect.h, dp);
             dp.yAnchor = YAnchor.MIDDLE;
-            viewContext.drawText("RM", rect.x, rect.y + rect.h / 2, dp);
+            view.drawText("RM", rect.x, rect.y + rect.h / 2, dp);
             dp.yAnchor = YAnchor.TOP;
-            viewContext.drawText("RT", rect.x, rect.y, dp);
+            view.drawText("RT", rect.x, rect.y, dp);
         }
     }
 
     @Override
     public void modelUpdated() {
         LOG.debug("model updated");
-        ExampleModel model = (ExampleModel) this.viewContext.getModel();
-        trackerViewPlugin.clearTrackingObjects(this);
+        ExampleModel model = view.getModel();
+        trackerViewPlugin.clearTrackableObjects(this);
         for (FRectangle rect : model.getRectangles()) {
             SimpleTrackableObject trackingObject = new SimpleTrackableObject();
             trackingObject.setTarget(rect);
             trackingObject.setFRect(new FRectangle(rect));
             trackingObject.setXPadding(1);
             trackingObject.setYPadding(1);
-            trackerViewPlugin.addTrackingObject(this,trackingObject);
+            trackerViewPlugin.addTrackableObject(this,trackingObject);
         }
     }
 
@@ -75,9 +78,8 @@ public class ExampleModelRectDrawable extends DrawableBase implements Trackable,
     }
 
     @Override
-    public void setView(View view) {
+    public void setView(View<ExampleModel> view) {
         super.setView(view);
-        trackerViewPlugin = view.findPlugin(TrackerViewPlugin.class);
         this.cursor = view.getCanvas().getDisplay().getSystemCursor(SWT.CURSOR_HAND);
     }
 

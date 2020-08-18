@@ -1,14 +1,15 @@
 package com.denispetrov.charting.example.drawable;
 
-import com.denispetrov.charting.drawable.impl.DrawableBase;
+import com.denispetrov.charting.plugin.impl.PluginAdapter;
+import com.denispetrov.charting.view.View;
 
 
 
-public class ViewportZeroMarkDrawable extends DrawableBase {
+public class ViewportZeroMarkDrawable<M> extends PluginAdapter<M> {
 
     @Override
-    public void draw() {
-        viewContext.drawLine(-10, -10, 10, 10);
-        viewContext.drawLine(10, -10, -10, 10);
+    public void draw(View<M> view, M model) {
+        view.drawLine(-10, -10, 10, 10);
+        view.drawLine(10, -10, -10, 10);
     }
 }
