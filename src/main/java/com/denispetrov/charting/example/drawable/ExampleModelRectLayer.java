@@ -1,38 +1,35 @@
 package com.denispetrov.charting.example.drawable;
 
-import java.util.Map;
-import java.util.Set;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Cursor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.denispetrov.charting.drawable.DrawParameters;
 import com.denispetrov.charting.example.model.ExampleModel;
+import com.denispetrov.charting.layer.ClickableLayer;
+import com.denispetrov.charting.layer.DrawableLayer;
+import com.denispetrov.charting.layer.ModelLayer;
+import com.denispetrov.charting.layer.TrackableLayer;
+import com.denispetrov.charting.layer.TrackableObject;
+import com.denispetrov.charting.layer.drawable.DrawParameters;
+import com.denispetrov.charting.layer.service.LayerAdapter;
+import com.denispetrov.charting.layer.service.TrackerServiceLayer;
+import com.denispetrov.charting.layer.service.trackable.SimpleTrackableObject;
 import com.denispetrov.charting.model.FRectangle;
 import com.denispetrov.charting.model.XAnchor;
 import com.denispetrov.charting.model.YAnchor;
-import com.denispetrov.charting.plugin.Clickable;
-import com.denispetrov.charting.plugin.DrawablePlugin;
-import com.denispetrov.charting.plugin.ModelAwarePlugin;
-import com.denispetrov.charting.plugin.Trackable;
-import com.denispetrov.charting.plugin.TrackableObject;
-import com.denispetrov.charting.plugin.impl.PluginAdapter;
-import com.denispetrov.charting.plugin.impl.SimpleTrackableObject;
-import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 
-public class ExampleModelRectDrawable extends PluginAdapter implements ModelAwarePlugin<ExampleModel>, DrawablePlugin, Trackable, Clickable {
-    private static final Logger LOG = LoggerFactory.getLogger(ExampleModelRectDrawable.class);
+public class ExampleModelRectLayer extends LayerAdapter implements ModelLayer<ExampleModel>, DrawableLayer, TrackableLayer, ClickableLayer {
+    private static final Logger LOG = LoggerFactory.getLogger(ExampleModelRectLayer.class);
 
-    private TrackerViewPlugin trackerViewPlugin;
+    private TrackerServiceLayer trackerLayer;
     private DrawParameters dp = new DrawParameters();
     private Cursor cursor;
     private ExampleModel model;
 
-    public ExampleModelRectDrawable(TrackerViewPlugin trackerViewPlugin) {
-        this.trackerViewPlugin = trackerViewPlugin;
+    public ExampleModelRectLayer(TrackerServiceLayer trackerLayer) {
+        this.trackerLayer = trackerLayer;
     }
 
     @Override
@@ -61,23 +58,19 @@ public class ExampleModelRectDrawable extends PluginAdapter implements ModelAwar
     public void modelUpdated(ExampleModel model) {
         LOG.trace("model updated");
         this.model = model;
-        trackerViewPlugin.clearTrackableObjects(this);
+        trackerLayer.clearTrackableObjects(this);
         for (FRectangle rect : model.getRectangles()) {
             SimpleTrackableObject trackableObject = new SimpleTrackableObject();
             trackableObject.setTarget(rect);
             trackableObject.setFRect(new FRectangle(rect));
-            trackableObject.setXPadding(1);
-            trackableObject.setYPadding(1);
-            trackerViewPlugin.addTrackableObject(this,trackableObject);
+            trackerLayer.addTrackableObject(this,trackableObject);
         }
     }
 
     @Override
-    public void objectClicked(Set<TrackableObject> objects, int button) {
-        for (TrackableObject o : objects) {
-            FRectangle rect = (FRectangle) o.getTarget();
-            LOG.debug("Rectangle {} {} {} {} clicked", rect.x, rect.y, rect.w, rect.h);
-        }
+    public void objectClicked(TrackableObject object, int button) {
+        FRectangle rect = (FRectangle) object.getTarget();
+        LOG.debug("Rectangle {} {} {} {} clicked", rect.x, rect.y, rect.w, rect.h);
     }
 
     @Override
@@ -92,7 +85,7 @@ public class ExampleModelRectDrawable extends PluginAdapter implements ModelAwar
     }
 
     @Override
-    public void mouseDown(Map<Clickable,Set<TrackableObject>> objects, int button, int x, int y) {
+    public void mouseDown(TrackableObject object, int button, int x, int y) {
     }
 
     @Override

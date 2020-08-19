@@ -1,10 +1,10 @@
 package com.denispetrov.charting.example.drawable;
 
-import com.denispetrov.charting.plugin.DrawablePlugin;
-import com.denispetrov.charting.plugin.impl.PluginAdapter;
+import com.denispetrov.charting.layer.DrawableLayer;
+import com.denispetrov.charting.layer.service.LayerAdapter;
 import com.denispetrov.charting.view.ViewContext;
 
-public class ViewportXAxisDrawable extends PluginAdapter implements DrawablePlugin {
+public class ViewportXAxisLayer extends LayerAdapter implements DrawableLayer {
 
     @Override
     public void draw() {

@@ -16,31 +16,31 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 
-import com.denispetrov.charting.drawable.ViewportBackgroundDrawable;
-import com.denispetrov.charting.example.drawable.ExampleModelDraggableRectDrawable;
-import com.denispetrov.charting.example.drawable.ExampleModelLabelDrawable;
-import com.denispetrov.charting.example.drawable.ExampleModelRectDrawable;
-import com.denispetrov.charting.example.drawable.ViewportXAxisDrawable;
-import com.denispetrov.charting.example.drawable.ViewportYAxisDrawable;
-import com.denispetrov.charting.example.drawable.ViewportZeroMarkDrawable;
+import com.denispetrov.charting.example.drawable.ExampleModelDraggableRectLayer;
+import com.denispetrov.charting.example.drawable.ExampleModelLabelLayer;
+import com.denispetrov.charting.example.drawable.ExampleModelRectLayer;
+import com.denispetrov.charting.example.drawable.ViewportXAxisLayer;
+import com.denispetrov.charting.example.drawable.ViewportYAxisLayer;
+import com.denispetrov.charting.example.drawable.ViewportZeroMarkLayer;
 import com.denispetrov.charting.example.model.ExampleModel;
 import com.denispetrov.charting.example.model.Label;
+import com.denispetrov.charting.layer.drawable.ViewportBackgroundLayer;
+import com.denispetrov.charting.layer.service.ClickerServiceLayer;
+import com.denispetrov.charting.layer.service.DraggerServiceLayer;
+import com.denispetrov.charting.layer.service.PanServiceLayer;
+import com.denispetrov.charting.layer.service.TrackerServiceLayer;
+import com.denispetrov.charting.layer.service.ZoomServiceLayer;
+import com.denispetrov.charting.model.AxisRange;
 import com.denispetrov.charting.model.FRectangle;
-import com.denispetrov.charting.plugin.impl.ClickerViewPlugin;
-import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
-import com.denispetrov.charting.plugin.impl.PanViewPlugin;
-import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
-import com.denispetrov.charting.plugin.impl.ZoomViewPlugin;
 import com.denispetrov.charting.view.ModelAwareView;
 import com.denispetrov.charting.view.ViewContext;
-import com.denispetrov.charting.view.ViewContext.AxisRange;
 
 public class Main {
 
     protected Shell shell;
     private Canvas zoomingPageCanvas;
     private ModelAwareView<ExampleModel> view;
-    private ZoomViewPlugin zoomPlugin;
+    private ZoomServiceLayer zoomLayer;
 
     private void run() {
         Display display = Display.getDefault();
@@ -163,7 +163,7 @@ public class Main {
         btnXStickyZero.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                zoomPlugin.setStickyX(btnXStickyZero.getSelection());
+                zoomLayer.setStickyX(btnXStickyZero.getSelection());
             }
         });
         btnXStickyZero.setText("Sticky Zero");
@@ -172,7 +172,7 @@ public class Main {
         btnYStickyZero.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                zoomPlugin.setStickyY(btnYStickyZero.getSelection());
+                zoomLayer.setStickyY(btnYStickyZero.getSelection());
             }
         });
         btnYStickyZero.setText("Sticky Zero");
@@ -218,23 +218,23 @@ public class Main {
         view = new ModelAwareView<ExampleModel>();
         view.setCanvas(zoomingPageCanvas);
 
-        TrackerViewPlugin trackerPlugin = new TrackerViewPlugin();
-        DraggerViewPlugin draggerPlugin = new DraggerViewPlugin(trackerPlugin);
-        zoomPlugin = new ZoomViewPlugin();
-        view.addPlugin(trackerPlugin);
-        view.addPlugin(new PanViewPlugin());
-        view.addPlugin(zoomPlugin);
-        view.addPlugin(new ClickerViewPlugin(trackerPlugin));
-        view.addPlugin(draggerPlugin);
+        TrackerServiceLayer trackerLayer = new TrackerServiceLayer();
+        DraggerServiceLayer draggerLayer = new DraggerServiceLayer(trackerLayer);
+        zoomLayer = new ZoomServiceLayer();
+        view.addLayer(trackerLayer);
+        view.addLayer(new PanServiceLayer());
+        view.addLayer(zoomLayer);
+        view.addLayer(new ClickerServiceLayer(trackerLayer));
+        view.addLayer(draggerLayer);
 
-        view.addPlugin(new ViewportBackgroundDrawable());
-        view.addPlugin(new ViewportXAxisDrawable());
-        view.addPlugin(new ViewportYAxisDrawable());
-        view.addPlugin(new ViewportZeroMarkDrawable());
+        view.addLayer(new ViewportBackgroundLayer());
+        view.addLayer(new ViewportXAxisLayer());
+        view.addLayer(new ViewportYAxisLayer());
+        view.addLayer(new ViewportZeroMarkLayer());
 
-        view.addModelAwarePlugin(new ExampleModelRectDrawable(trackerPlugin));
-        view.addModelAwarePlugin(new ExampleModelDraggableRectDrawable(trackerPlugin, draggerPlugin));
-        view.addModelAwarePlugin(new ExampleModelLabelDrawable(trackerPlugin, draggerPlugin));
+        view.addModelLayer(new ExampleModelRectLayer(trackerLayer));
+        view.addModelLayer(new ExampleModelDraggableRectLayer(trackerLayer, draggerLayer));
+        view.addModelLayer(new ExampleModelLabelLayer(trackerLayer, draggerLayer));
 
         view.init();
 
