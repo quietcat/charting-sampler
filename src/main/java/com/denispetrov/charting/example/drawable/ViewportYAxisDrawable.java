@@ -1,13 +1,13 @@
 package com.denispetrov.charting.example.drawable;
 
+import com.denispetrov.charting.plugin.DrawablePlugin;
 import com.denispetrov.charting.plugin.impl.PluginAdapter;
-import com.denispetrov.charting.view.View;
 import com.denispetrov.charting.view.ViewContext;
 
-public class ViewportYAxisDrawable<M> extends PluginAdapter<M> {
+public class ViewportYAxisDrawable extends PluginAdapter implements DrawablePlugin {
 
     @Override
-    public void draw(View<M> view, M model) {
+    public void draw() {
         ViewContext viewContext = view.getViewContext();
         int resizePosition = viewContext.y(viewContext.getBaseY() + view.getHeight() * viewContext.getResizeCenterY());
         switch (viewContext.getXAxisRange()) {

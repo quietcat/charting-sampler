@@ -15,6 +15,8 @@ import com.denispetrov.charting.example.model.Label;
 import com.denispetrov.charting.model.FPoint;
 import com.denispetrov.charting.plugin.Clickable;
 import com.denispetrov.charting.plugin.Draggable;
+import com.denispetrov.charting.plugin.DrawablePlugin;
+import com.denispetrov.charting.plugin.ModelAwarePlugin;
 import com.denispetrov.charting.plugin.Trackable;
 import com.denispetrov.charting.plugin.TrackableObject;
 import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
@@ -23,27 +25,29 @@ import com.denispetrov.charting.plugin.impl.SimpleTrackableObject;
 import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 
-public class ExampleModelLabelDrawable extends PluginAdapter<ExampleModel> implements Trackable, Draggable, Clickable {
+public class ExampleModelLabelDrawable extends PluginAdapter implements ModelAwarePlugin<ExampleModel>, DrawablePlugin, Trackable, Draggable, Clickable {
     private static final Logger LOG = LoggerFactory.getLogger(ExampleModelLabelDrawable.class);
 
-    private TrackerViewPlugin<ExampleModel> trackerViewPlugin;
-    private DraggerViewPlugin<ExampleModel> draggerViewPlugin;
+    private TrackerViewPlugin trackerViewPlugin;
+    private DraggerViewPlugin draggerViewPlugin;
     private Cursor cursor;
     private DrawParameters drawParameters = new DrawParameters();
 
-    private TrackableObject lastUpdatedTO = null;
+//    private TrackableObject lastUpdatedTO = null;
     private boolean needToUpdateIRects = false;
     private TrackableObject objectDragged = null;
 
-    public ExampleModelLabelDrawable(TrackerViewPlugin<ExampleModel> trackerViewPlugin, DraggerViewPlugin<ExampleModel> draggerViewPlugin) {
+    private ExampleModel model;
+
+    public ExampleModelLabelDrawable(TrackerViewPlugin trackerViewPlugin, DraggerViewPlugin draggerViewPlugin) {
         this.trackerViewPlugin = trackerViewPlugin;
         this.draggerViewPlugin = draggerViewPlugin;
     }
 
     @Override
-    public void draw(View<ExampleModel> view, ExampleModel model) {
+    public void draw() {
         if (needToUpdateIRects) {
-            if (lastUpdatedTO == null) {
+//            if (lastUpdatedTO == null) {
                 // loop through trackable objects instead of the actual labels in the model
                 // to update clickable areas, for which we need a GC that's only available during drawing
                 Collection<TrackableObject> trackables = trackerViewPlugin.getTrackables(this);
@@ -53,25 +57,22 @@ public class ExampleModelLabelDrawable extends PluginAdapter<ExampleModel> imple
                     to.setFRect(view.getViewContext().rectangle(to.getIRect()));
                     view.drawText(label.getText(), label.getOrigin().x, label.getOrigin().y, drawParameters);
                 }
-            } else {
-                // only need to update trackable object for one label
-                Label label = (Label) lastUpdatedTO.getTarget();
-                lastUpdatedTO.setIRect(view.textRectangle(
-                        label.getText(),
-                        label.getOrigin().x,
-                        label.getOrigin().y,
-                        drawParameters));
-                lastUpdatedTO.setFRect(view.getViewContext().rectangle(lastUpdatedTO.getIRect()));
-                drawLabels();
-            }
+//            } else {
+//                // only need to update trackable object for one label
+//                Label label = (Label) lastUpdatedTO.getTarget();
+//                lastUpdatedTO.setIRect(view.textRectangle(
+//                        label.getText(),
+//                        label.getOrigin().x,
+//                        label.getOrigin().y,
+//                        drawParameters));
+//                lastUpdatedTO.setFRect(view.getViewContext().rectangle(lastUpdatedTO.getIRect()));
+//            }
             needToUpdateIRects = false;
-        } else {
-            drawLabels();
         }
+        drawLabels();
     }
 
     private void drawLabels() {
-        ExampleModel model = view.getModel();
         for (Label label : model.getLabels()) {
             view.drawText(
                     label.getText(),
@@ -87,10 +88,10 @@ public class ExampleModelLabelDrawable extends PluginAdapter<ExampleModel> imple
     }
 
     @Override
-    public void modelUpdated() {
+    public void modelUpdated(ExampleModel model) {
         LOG.debug("model updated");
-        ExampleModel model = view.getModel();
-        lastUpdatedTO = null;
+        this.model = model;
+//        lastUpdatedTO = null;
         trackerViewPlugin.clearTrackableObjects(this);
         for (Label label : model.getLabels()) {
             TrackableObject to = new SimpleTrackableObject();
@@ -103,21 +104,22 @@ public class ExampleModelLabelDrawable extends PluginAdapter<ExampleModel> imple
         needToUpdateIRects = true;
     }
 
-    @Override
-    public void modelUpdated(Object component, Object item) {
-        if (component == this && item != null) {
-            lastUpdatedTO = (TrackableObject) item;
-            Label lastUpdatedLabel = (Label) lastUpdatedTO.getTarget();
-            LOG.debug("Label updated ({})", lastUpdatedLabel.getText());
-            needToUpdateIRects = true;
-        }
-    }
+//    @Override
+//    public void modelUpdated(ExampleModel model, Plugin component, Object item) {
+//        if (component == this && item != null) {
+//            lastUpdatedTO = (TrackableObject) item;
+//            Label lastUpdatedLabel = (Label) lastUpdatedTO.getTarget();
+//            LOG.debug("Label updated ({})", lastUpdatedLabel.getText());
+//            needToUpdateIRects = true;
+//        }
+//    }
 
     @Override
     public void setOrigin(Object object, FPoint origin) {
         Label label = (Label) object;
         label.getOrigin().x = origin.x;
         label.getOrigin().y = origin.y;
+        view.getCanvas().redraw();
     }
 
     @Override
@@ -127,7 +129,7 @@ public class ExampleModelLabelDrawable extends PluginAdapter<ExampleModel> imple
     }
 
     @Override
-    public void setView(View<ExampleModel> view) {
+    public void setView(View view) {
         super.setView(view);
         this.cursor = view.getCanvas().getDisplay().getSystemCursor(SWT.CURSOR_HAND);
         drawParameters.xMargin = 5;
@@ -151,12 +153,12 @@ public class ExampleModelLabelDrawable extends PluginAdapter<ExampleModel> imple
     public void contextUpdated() {
         // force recalc of irects
         needToUpdateIRects = true;
-        lastUpdatedTO = null;
+//        lastUpdatedTO = null;
     }
 
     @Override
     public void mouseDown(Map<Clickable,Set<TrackableObject>> objects, int button, int x, int y) {
-        LOG.debug("{}", objects);
+        LOG.debug("Mouse Down {}", objects);
         Set<TrackableObject> myObjects = objects.get(this);
         if ( myObjects != null && myObjects.size() > 0) {
             objectDragged = myObjects.iterator().next();

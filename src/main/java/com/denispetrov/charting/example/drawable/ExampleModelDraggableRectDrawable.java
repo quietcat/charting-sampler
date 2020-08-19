@@ -13,6 +13,8 @@ import com.denispetrov.charting.model.FPoint;
 import com.denispetrov.charting.model.FRectangle;
 import com.denispetrov.charting.plugin.Clickable;
 import com.denispetrov.charting.plugin.Draggable;
+import com.denispetrov.charting.plugin.DrawablePlugin;
+import com.denispetrov.charting.plugin.ModelAwarePlugin;
 import com.denispetrov.charting.plugin.Trackable;
 import com.denispetrov.charting.plugin.TrackableObject;
 import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
@@ -21,30 +23,32 @@ import com.denispetrov.charting.plugin.impl.SimpleTrackableObject;
 import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
 import com.denispetrov.charting.view.View;
 
-public class ExampleModelDraggableRectDrawable extends PluginAdapter<ExampleModel> implements Trackable, Draggable, Clickable {
+public class ExampleModelDraggableRectDrawable extends PluginAdapter implements ModelAwarePlugin<ExampleModel>, DrawablePlugin, Trackable, Draggable, Clickable {
     private static final Logger LOG = LoggerFactory.getLogger(ExampleModelDraggableRectDrawable.class);
 
-    private TrackerViewPlugin<ExampleModel> trackerViewPlugin;
-    private DraggerViewPlugin<ExampleModel> draggerViewPlugin;
+    private TrackerViewPlugin trackerViewPlugin;
+    private DraggerViewPlugin draggerViewPlugin;
     private TrackableObject objectDragged;
     private Cursor cursor;
 
-    public ExampleModelDraggableRectDrawable(TrackerViewPlugin<ExampleModel> trackerViewPlugin, DraggerViewPlugin<ExampleModel> draggerViewPlugin) {
+    private ExampleModel model;
+
+    public ExampleModelDraggableRectDrawable(TrackerViewPlugin trackerViewPlugin, DraggerViewPlugin draggerViewPlugin) {
         this.trackerViewPlugin = trackerViewPlugin;
         this.draggerViewPlugin = draggerViewPlugin;
     }
 
     @Override
-    public void draw(View<ExampleModel> view, ExampleModel model) {
+    public void draw() {
         for (FRectangle rect : model.getDraggableRectangles()) {
             view.drawRectangle(rect.x, rect.y, rect.w, rect.h);
         }
     }
 
     @Override
-    public void modelUpdated() {
+    public void modelUpdated(ExampleModel model) {
         LOG.debug("model updated");
-        ExampleModel model = view.getModel();
+        this.model = model;
         trackerViewPlugin.clearTrackableObjects(this);
         for (FRectangle rect : model.getDraggableRectangles()) {
             TrackableObject to = new SimpleTrackableObject();
@@ -57,19 +61,19 @@ public class ExampleModelDraggableRectDrawable extends PluginAdapter<ExampleMode
         }
     }
 
-    @Override
-    public void modelUpdated(Object component, Object item) {
-        if (component == this && item != null) {
-            TrackableObject to = (TrackableObject) item;
-            FRectangle rect = (FRectangle) to.getTarget();
-            to.setFRect(rect);
-            to.setIRect(view.getViewContext().rectangle(rect));
-            LOG.debug("Rectangle updated ({} {} {} {})", rect.x, rect.y, rect.w, rect.h);
-        }
-    }
+//    @Override
+//    public void modelUpdated(ExampleModel model, Plugin component, Object item) {
+//        if (component == this && item != null) {
+//            TrackableObject to = (TrackableObject) item;
+//            FRectangle rect = (FRectangle) to.getTarget();
+//            to.setFRect(rect);
+//            to.setIRect(view.getViewContext().rectangle(rect));
+//            LOG.debug("Rectangle updated ({} {} {} {})", rect.x, rect.y, rect.w, rect.h);
+//        }
+//    }
 
     @Override
-    public void setView(View<ExampleModel> view) {
+    public void setView(View view) {
         super.setView(view);
         this.cursor = view.getCanvas().getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL);
     }
@@ -84,6 +88,7 @@ public class ExampleModelDraggableRectDrawable extends PluginAdapter<ExampleMode
         FRectangle target = (FRectangle) object;
         target.x = origin.x;
         target.y = origin.y;
+        view.getCanvas().redraw();
     }
 
     @Override

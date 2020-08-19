@@ -1,38 +1,46 @@
 package com.denispetrov.charting.example;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 
 import com.denispetrov.charting.drawable.ViewportBackgroundDrawable;
-import com.denispetrov.charting.example.drawable.*;
+import com.denispetrov.charting.example.drawable.ExampleModelDraggableRectDrawable;
+import com.denispetrov.charting.example.drawable.ExampleModelLabelDrawable;
+import com.denispetrov.charting.example.drawable.ExampleModelRectDrawable;
+import com.denispetrov.charting.example.drawable.ViewportXAxisDrawable;
+import com.denispetrov.charting.example.drawable.ViewportYAxisDrawable;
+import com.denispetrov.charting.example.drawable.ViewportZeroMarkDrawable;
 import com.denispetrov.charting.example.model.ExampleModel;
 import com.denispetrov.charting.example.model.Label;
 import com.denispetrov.charting.model.FRectangle;
-import com.denispetrov.charting.plugin.impl.*;
-import com.denispetrov.charting.view.View;
+import com.denispetrov.charting.plugin.impl.ClickerViewPlugin;
+import com.denispetrov.charting.plugin.impl.DraggerViewPlugin;
+import com.denispetrov.charting.plugin.impl.PanViewPlugin;
+import com.denispetrov.charting.plugin.impl.TrackerViewPlugin;
+import com.denispetrov.charting.plugin.impl.ZoomViewPlugin;
+import com.denispetrov.charting.view.ModelAwareView;
 import com.denispetrov.charting.view.ViewContext;
 import com.denispetrov.charting.view.ViewContext.AxisRange;
-
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Scale;
 
 public class Main {
 
     protected Shell shell;
     private Canvas zoomingPageCanvas;
-    private View<ExampleModel> view;
-    private ZoomViewPlugin<ExampleModel> zoomPlugin;
+    private ModelAwareView<ExampleModel> view;
+    private ZoomViewPlugin zoomPlugin;
 
     private void run() {
         Display display = Display.getDefault();
@@ -207,26 +215,26 @@ public class Main {
     }
 
     protected void createView() {
-        view = new View<ExampleModel>();
+        view = new ModelAwareView<ExampleModel>();
         view.setCanvas(zoomingPageCanvas);
 
-        TrackerViewPlugin<ExampleModel> trackerPlugin = new TrackerViewPlugin<>();
-        DraggerViewPlugin<ExampleModel> draggerPlugin = new DraggerViewPlugin<>(trackerPlugin);
-        zoomPlugin = new ZoomViewPlugin<>();
+        TrackerViewPlugin trackerPlugin = new TrackerViewPlugin();
+        DraggerViewPlugin draggerPlugin = new DraggerViewPlugin(trackerPlugin);
+        zoomPlugin = new ZoomViewPlugin();
         view.addPlugin(trackerPlugin);
-        view.addPlugin(new PanViewPlugin<>());
+        view.addPlugin(new PanViewPlugin());
         view.addPlugin(zoomPlugin);
-        view.addPlugin(new ClickerViewPlugin<>(trackerPlugin));
+        view.addPlugin(new ClickerViewPlugin(trackerPlugin));
         view.addPlugin(draggerPlugin);
 
-        view.addPlugin(new ViewportBackgroundDrawable<>());
-        view.addPlugin(new ViewportXAxisDrawable<>());
-        view.addPlugin(new ViewportYAxisDrawable<>());
-        view.addPlugin(new ViewportZeroMarkDrawable<>());
+        view.addPlugin(new ViewportBackgroundDrawable());
+        view.addPlugin(new ViewportXAxisDrawable());
+        view.addPlugin(new ViewportYAxisDrawable());
+        view.addPlugin(new ViewportZeroMarkDrawable());
 
-        view.addPlugin(new ExampleModelRectDrawable(trackerPlugin));
-        view.addPlugin(new ExampleModelDraggableRectDrawable(trackerPlugin, draggerPlugin));
-        view.addPlugin(new ExampleModelLabelDrawable(trackerPlugin, draggerPlugin));
+        view.addModelAwarePlugin(new ExampleModelRectDrawable(trackerPlugin));
+        view.addModelAwarePlugin(new ExampleModelDraggableRectDrawable(trackerPlugin, draggerPlugin));
+        view.addModelAwarePlugin(new ExampleModelLabelDrawable(trackerPlugin, draggerPlugin));
 
         view.init();
 
@@ -241,6 +249,6 @@ public class Main {
         model.getDraggableRectangles().add(new FRectangle(100, 200, 100, 50));
         model.getLabels().add(new Label("Label 1", 500.0, 100.0));
         model.getLabels().add(new Label("Label 2", 500.0, 200.0));
-        view.setModel(model);
+        view.modelUpdated(model);
     }
 }
