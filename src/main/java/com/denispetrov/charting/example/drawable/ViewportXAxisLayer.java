@@ -1,7 +1,7 @@
 package com.denispetrov.charting.example.drawable;
 
 import com.denispetrov.charting.layer.DrawableLayer;
-import com.denispetrov.charting.layer.service.LayerAdapter;
+import com.denispetrov.charting.layer.adapters.LayerAdapter;
 import com.denispetrov.charting.view.ViewContext;
 
 public class ViewportXAxisLayer extends LayerAdapter implements DrawableLayer {
