@@ -1,37 +1,46 @@
 package com.denispetrov.charting.example;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 
-import com.denispetrov.charting.drawable.impl.ViewportBackgroundDrawable;
-import com.denispetrov.charting.example.drawable.*;
+import com.denispetrov.charting.example.drawable.ExampleModelDraggableRectLayer;
+import com.denispetrov.charting.example.drawable.ExampleModelLabelLayer;
+import com.denispetrov.charting.example.drawable.ExampleModelRectLayer;
+import com.denispetrov.charting.example.drawable.ViewportXAxisLayer;
+import com.denispetrov.charting.example.drawable.ViewportYAxisLayer;
+import com.denispetrov.charting.example.drawable.ViewportZeroMarkLayer;
 import com.denispetrov.charting.example.model.ExampleModel;
 import com.denispetrov.charting.example.model.Label;
+import com.denispetrov.charting.layer.drawable.ViewportBackgroundLayer;
+import com.denispetrov.charting.layer.service.ClickerServiceLayer;
+import com.denispetrov.charting.layer.service.DraggerServiceLayer;
+import com.denispetrov.charting.layer.service.PanServiceLayer;
+import com.denispetrov.charting.layer.service.TrackerServiceLayer;
+import com.denispetrov.charting.layer.service.ZoomServiceLayer;
+import com.denispetrov.charting.model.AxisRange;
 import com.denispetrov.charting.model.FRectangle;
-import com.denispetrov.charting.plugin.impl.*;
-import com.denispetrov.charting.view.View;
+import com.denispetrov.charting.view.ModelAwareView;
 import com.denispetrov.charting.view.ViewContext;
-import com.denispetrov.charting.view.ViewContext.AxisRange;
-
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Scale;
 
 public class Main {
 
     protected Shell shell;
     private Canvas zoomingPageCanvas;
-    private View view;
+    private ModelAwareView<ExampleModel> view;
+    private ZoomServiceLayer zoomLayer;
 
     private void run() {
         Display display = Display.getDefault();
@@ -154,7 +163,7 @@ public class Main {
         btnXStickyZero.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                view.findPlugin(ZoomViewPlugin.class).setStickyX(btnXStickyZero.getSelection());
+                zoomLayer.setStickyX(btnXStickyZero.getSelection());
             }
         });
         btnXStickyZero.setText("Sticky Zero");
@@ -163,7 +172,7 @@ public class Main {
         btnYStickyZero.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                view.findPlugin(ZoomViewPlugin.class).setStickyY(btnYStickyZero.getSelection());
+                zoomLayer.setStickyY(btnYStickyZero.getSelection());
             }
         });
         btnYStickyZero.setText("Sticky Zero");
@@ -206,23 +215,26 @@ public class Main {
     }
 
     protected void createView() {
-        view = new View();
+        view = new ModelAwareView<ExampleModel>();
         view.setCanvas(zoomingPageCanvas);
 
-        view.addViewPlugin(new TrackerViewPlugin());
-        view.addViewPlugin(new PanViewPlugin());
-        view.addViewPlugin(new ZoomViewPlugin());
-        view.addViewPlugin(new ClickerViewPlugin());
-        view.addViewPlugin(new DraggerViewPlugin());
+        TrackerServiceLayer trackerLayer = new TrackerServiceLayer();
+        DraggerServiceLayer draggerLayer = new DraggerServiceLayer(trackerLayer);
+        zoomLayer = new ZoomServiceLayer();
+        view.addLayer(trackerLayer);
+        view.addLayer(new PanServiceLayer());
+        view.addLayer(zoomLayer);
+        view.addLayer(new ClickerServiceLayer(trackerLayer));
+        view.addLayer(draggerLayer);
 
-        view.addDrawable(new ViewportBackgroundDrawable());
-        view.addDrawable(new ViewportXAxisDrawable());
-        view.addDrawable(new ViewportYAxisDrawable());
-        view.addDrawable(new ViewportZeroMarkDrawable());
+        view.addLayer(new ViewportBackgroundLayer());
+        view.addLayer(new ViewportXAxisLayer());
+        view.addLayer(new ViewportYAxisLayer());
+        view.addLayer(new ViewportZeroMarkLayer());
 
-        view.addDrawable(new ExampleModelRectDrawable());
-        view.addDrawable(new ExampleModelDraggableRectDrawable());
-        view.addDrawable(new ExampleModelLabelDrawable());
+        view.addModelLayer(new ExampleModelRectLayer(trackerLayer));
+        view.addModelLayer(new ExampleModelDraggableRectLayer(trackerLayer, draggerLayer));
+        view.addModelLayer(new ExampleModelLabelLayer(trackerLayer, draggerLayer));
 
         view.init();
 
@@ -237,6 +249,6 @@ public class Main {
         model.getDraggableRectangles().add(new FRectangle(100, 200, 100, 50));
         model.getLabels().add(new Label("Label 1", 500.0, 100.0));
         model.getLabels().add(new Label("Label 2", 500.0, 200.0));
-        view.setModel(model);
+        view.modelUpdated(model);
     }
 }
